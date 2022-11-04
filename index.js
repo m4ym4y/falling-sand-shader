@@ -271,8 +271,18 @@ async function main () {
 
   const brushSize = 10
   const brushes = [
-    [255, 0, 0, 255], // sand
-    [0, 255, 0, 255]  // wall
+    {
+      name: 'sand',
+      color: [255, 0, 0, 255]
+    },
+    {
+      name: 'wall',
+      color: [0, 255, 0, 255]
+    },
+    {
+      name: 'erase',
+      color: [0, 0, 0, 255]
+    }
   ]
   let brushType = 0
 
@@ -280,7 +290,7 @@ async function main () {
     console.log(brushType, brushes, brushes[brushType])
     gl.bindTexture(gl.TEXTURE_2D, frontTexture)
     gl.texSubImage2D(gl.TEXTURE_2D, 0, x, sizeY - y, brushSize, brushSize, gl.RGBA, gl.UNSIGNED_BYTE,
-      getColorArea(brushSize, brushSize, brushes[brushType]))
+      getColorArea(brushSize, brushSize, brushes[brushType].color))
   }
 
   canvas.addEventListener('mousemove', event => {
@@ -289,6 +299,10 @@ async function main () {
       onclick(event.offsetX, event.offsetY)
     }
   })
+  
+  const showBrush = () => {
+    document.getElementById('brush').innerText = brushes[brushType].name
+  }
 
   canvas.addEventListener('contextmenu', ev => ev.preventDefault())
   canvas.addEventListener('mousedown', event => {
@@ -296,8 +310,11 @@ async function main () {
       event.preventDefault()
       console.log('registered click')
       brushType = (brushType + 1) % brushes.length
+      showBrush()
     }
   })
+
+  showBrush()
 
   const stepsPerDraw = 1
   while (true) {
