@@ -38,6 +38,7 @@ const empty = [ 0, 0, 0, 255 ]
 const fire = [ 255, 0, 0, 255 ]
 const fireB1 = [ 204, 51, 51, 255 ]
 const fireB2 = [ 153, 51, 51, 255 ]
+const cloner = [ 111, 78, 55, 255 ]
 
 // TODO: get the passed in scale to work
 const fragment_shader = `
@@ -60,6 +61,11 @@ const fragment_shader = `
   #define fire_burnout_1 vec4(0.8, 0.2, 0.2, 1.0)
   // 153, 0, 0
   #define fire_burnout_2 vec4(0.6, 0.2, 0.2, 1.0)
+
+  // 11, 78, 55
+  #define cloner vec4(0.43529411764705883, 0.3058823529411765, 0.21568627450980393, 1.0)
+  #define cloner_sand vec4(0.43529411764705883, 0.3058823529411765, 0.2196078431372549, 1.0)
+  #define cloner_fire vec4(0.43529411764705883, 0.3058823529411765, 0.2235294117647059, 1.0)
 
   vec4 get(int x, int y) {
     return vec4(texture2D(state, (gl_FragCoord.xy + vec2(x, y)) / scale));
@@ -84,8 +90,9 @@ const fragment_shader = `
 
     bool iswall = current == wall;
     bool sandontop = uc == sand;
-    bool onbottom = dc == sand || dc == wall;
+    bool onbottom = dc == sand || dc == wall || dc == cloner || dc == cloner_fire || dc == cloner_sand;
     bool issand = current == sand;
+    bool iscloner = current == cloner;
 
     bool isfireadjacent =
       dc == fire ||
@@ -96,8 +103,22 @@ const fragment_shader = `
       ur == fire ||
       uc == fire;
 
-    if (iswall) {
-      gl_FragColor = wall;
+    if (iswall || current == cloner_fire || current == cloner_sand) {
+      gl_FragColor = current;
+    } else if (iscloner) {
+      if (
+        (uc == cloner_fire || dc == cloner_fire || cl == cloner_fire || cr == cloner_fire) ||
+        (uc == fire || dc == fire || cl == fire || cr == fire)
+      ) {
+        gl_FragColor = cloner_fire;
+      } else if (
+        (uc == cloner_sand || dc == cloner_sand || cl == cloner_sand || cr == cloner_sand) ||
+        (uc == sand || dc == sand || cl == sand || cr == sand)
+      ) {
+        gl_FragColor = cloner_sand;
+      } else {
+        gl_FragColor = cloner;
+      }
     } else {
       if (issand) {
         // particle exposed to fire = fire
@@ -149,29 +170,46 @@ const fragment_shader = `
         }
       }
 
-      else if (
-        current == empty &&
-        uc == empty &&
-        dc == empty &&
-        ((
-          cr == sand &&
-          ur == empty &&
-          dr == sand
-        ) ||
-        (
-          cl == sand &&
-          ul == empty &&
-          dl == sand
-        ))
-      ) {
-        gl_FragColor = sand;
-      }
-
-      else if (current == empty && dc == fire_burnout_1) {
-        if (rand(vec2(gl_FragCoord) * (seed + 2.0)) > 0.2) {
-          gl_FragColor = fire_burnout_1;
-        } else {
-          gl_FragColor = fire_burnout_2;
+      else if (current == empty) {
+        if (
+          uc == empty &&
+          dc == empty &&
+          ((
+            cr == sand &&
+            ur == empty &&
+            dr == sand
+          ) ||
+          (
+            cl == sand &&
+            ul == empty &&
+            dl == sand
+          ))
+        ) {
+          gl_FragColor = sand;
+        }
+        else if (current == empty && uc == cloner_sand) {
+          if (rand(vec2(gl_FragCoord) * (seed + 2.0)) > 0.95) {
+            gl_FragColor = sand;
+          } else {
+            gl_FragColor = empty;
+          }
+        }
+        else if (current == empty && dc == cloner_fire) {
+          if (rand(vec2(gl_FragCoord) * (seed + 2.0)) > 0.5) {
+            gl_FragColor = fire;
+          } else {
+            gl_FragColor = empty;
+          }
+        }
+        else if (current == empty && dc == fire_burnout_1) {
+          if (rand(vec2(gl_FragCoord) * (seed + 2.0)) > 0.2) {
+            gl_FragColor = fire_burnout_1;
+          } else {
+            gl_FragColor = fire_burnout_2;
+          }
+        }
+        else {
+          gl_FragColor = empty;
         }
       }
 
@@ -378,6 +416,10 @@ async function main () {
     {
       name: 'fire',
       color: fire
+    },
+    {
+      name: 'cloner',
+      color: cloner
     },
     {
       name: 'erase',
