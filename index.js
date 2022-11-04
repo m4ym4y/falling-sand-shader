@@ -270,16 +270,32 @@ async function main () {
   }, 1000)
 
   const brushSize = 10
+  const brushes = [
+    [255, 0, 0, 255], // sand
+    [0, 255, 0, 255]  // wall
+  ]
+  let brushType = 0
+
   const onclick = function (x, y) {
+    console.log(brushType, brushes, brushes[brushType])
     gl.bindTexture(gl.TEXTURE_2D, frontTexture)
     gl.texSubImage2D(gl.TEXTURE_2D, 0, x, sizeY - y, brushSize, brushSize, gl.RGBA, gl.UNSIGNED_BYTE,
-      getColorArea(brushSize, brushSize, [255, 0, 0, 255]))
+      getColorArea(brushSize, brushSize, brushes[brushType]))
   }
 
   canvas.addEventListener('mousemove', event => {
     if (event.buttons & 1) {
       console.log('registered move')
       onclick(event.offsetX, event.offsetY)
+    }
+  })
+
+  canvas.addEventListener('contextmenu', ev => ev.preventDefault())
+  canvas.addEventListener('mousedown', event => {
+    if (event.buttons & 2) {
+      event.preventDefault()
+      console.log('registered click')
+      brushType = (brushType + 1) % brushes.length
     }
   })
 
