@@ -36,8 +36,8 @@ const sand = [ 246, 215, 176, 255 ]
 const wall = [ 127, 127, 127, 255 ]
 const empty = [ 0, 0, 0, 255 ]
 const fire = [ 255, 0, 0, 255 ]
-const fireB1 = [ 204, 0, 0, 255 ]
-const fireB2 = [ 153, 0, 0, 255 ]
+const fireB1 = [ 204, 51, 51, 255 ]
+const fireB2 = [ 153, 51, 51, 255 ]
 
 // TODO: get the passed in scale to work
 const fragment_shader = `
@@ -57,9 +57,9 @@ const fragment_shader = `
   // 255, 0, 0
   #define fire vec4(1.0, 0.0, 0.0, 1.0)
   // 204, 0, 0
-  #define fire_burnout_1 vec4(0.8, 0.0, 0.0, 1.0)
+  #define fire_burnout_1 vec4(0.8, 0.2, 0.2, 1.0)
   // 153, 0, 0
-  #define fire_burnout_2 vec4(0.6, 0.0, 0.0, 1.0)
+  #define fire_burnout_2 vec4(0.6, 0.2, 0.2, 1.0)
 
   vec4 get(int x, int y) {
     return vec4(texture2D(state, (gl_FragCoord.xy + vec2(x, y)) / scale));
@@ -71,26 +71,37 @@ const fragment_shader = `
 
   void main() {
     vec4 current = vec4(get(0, 0));
+
+    // down left, up left, center left, etc.
+    vec4 ur = vec4(get(1, 1));
+    vec4 uc = vec4(get(0, 1));
+    vec4 ul = vec4(get(-1, 1));
+    vec4 cl = vec4(get(-1, 0));
+    vec4 cr = vec4(get(1, 0));
+    vec4 dl = vec4(get(-1, -1));
+    vec4 dc = vec4(get(0, -1));
+    vec4 dr = vec4(get(1, -1));
+
     bool iswall = current == wall;
-    bool sandontop = get(0, 1) == sand;
-    bool onbottom = get(0, -1) == sand || get(0, -1) == wall;
+    bool sandontop = uc == sand;
+    bool onbottom = dc == sand || dc == wall;
     bool issand = current == sand;
 
     bool isfireadjacent =
-      get(0, -1) == fire ||
-      get(1, -1) == fire ||
-      get(-1, -1) == fire ||
-      get(1, 0) == fire ||
-      get(-1, 0) == fire ||
-      get(1, 1) == fire ||
-      get(-1, 1) == fire;
+      dc == fire ||
+      dr == fire ||
+      dl == fire ||
+      uc == fire ||
+      ul == fire ||
+      ur == fire ||
+      uc == fire;
 
     if (iswall) {
       gl_FragColor = wall;
     } else {
       if (issand) {
         // particle exposed to fire = fire
-        if (isfireadjacent && rand(vec2(gl_FragCoord) * seed) > 0.5) {
+        if (isfireadjacent && rand(vec2(gl_FragCoord) * seed) > 0.7) {
           gl_FragColor = fire;
         // particle lands on something = filled
         } else if (onbottom) {
@@ -108,11 +119,31 @@ const fragment_shader = `
       }
 
       else if (current == fire) {
-        gl_FragColor = fire_burnout_1;
+        if (rand(vec2(gl_FragCoord) * (seed + 1.0)) > 0.9) {
+          gl_FragColor = fire_burnout_1;
+        } else {
+          gl_FragColor = fire;
+        }
       } else if (current == fire_burnout_1) {
-        gl_FragColor = fire_burnout_2;
+        if (rand(vec2(gl_FragCoord) * (seed + 1.0)) > 0.9) {
+          gl_FragColor = fire_burnout_2;
+        } else {
+          gl_FragColor = fire_burnout_1;
+        }
       } else if (current == fire_burnout_2) {
-        gl_FragColor = empty;
+        if (rand(vec2(gl_FragCoord) * (seed + 2.0)) > 0.9) {
+          gl_FragColor = empty;
+        } else {
+          gl_FragColor = fire_burnout_2;
+        }
+      }
+
+      else if (current == empty && dc == fire_burnout_1) {
+        if (rand(vec2(gl_FragCoord) * (seed + 2.0)) > 0.2) {
+          gl_FragColor = fire_burnout_1;
+        } else {
+          gl_FragColor = fire_burnout_2;
+        }
       }
 
       // not filled, nothing on bottom
