@@ -104,9 +104,20 @@ const fragment_shader = `
         if (isfireadjacent && rand(vec2(gl_FragCoord) * seed) > 0.7) {
           gl_FragColor = fire;
         // particle lands on something = filled
-        } else if (onbottom) {
-          gl_FragColor = sand;
+        // particle is not on a corner
+        } else if (
+          onbottom &&
+          (
+            uc != empty ||
+            dc != sand ||
+            (
+              (cl != empty || ul != empty || dl != empty) &&
+              (cr != empty || ur != empty || dr != empty)
+            )
+          )
+        ) {
 
+          gl_FragColor = sand;
         // particle is falling out of this cell, nothing falling in = empty
         } else {
           gl_FragColor = empty;
@@ -136,6 +147,24 @@ const fragment_shader = `
         } else {
           gl_FragColor = fire_burnout_2;
         }
+      }
+
+      else if (
+        current == empty &&
+        uc == empty &&
+        dc == empty &&
+        ((
+          cr == sand &&
+          ur == empty &&
+          dr == sand
+        ) ||
+        (
+          cl == sand &&
+          ul == empty &&
+          dl == sand
+        ))
+      ) {
+        gl_FragColor = sand;
       }
 
       else if (current == empty && dc == fire_burnout_1) {
