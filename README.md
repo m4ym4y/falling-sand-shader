@@ -1,6 +1,6 @@
 # sand game shader
 
-![video of sand game](./demo.gif)
+![gif of sand game](./sand-demo.gif)
 
 [**Try it out**](https://m4ym4y.github.io/falling-sand-shader/)
 
