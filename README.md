@@ -1,6 +1,6 @@
 # sand game shader
 
-![screenshot of particles falling](./screenshot.png)
+![video of sand game](./sand_demo.mp4)
 
 [**Try it out**](https://m4ym4y.github.io/falling-sand-shader/)
 
