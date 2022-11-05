@@ -36,21 +36,27 @@ function setRandom (glh, texture, concentration) {
   glh.subImage(texture, source)
 }
 
-function showBrush (brush) {
-  document.getElementById('brush').innerText = brush.getBrushName()
-}
-
 function setUpTools (brush) {
   const brushesDiv = document.getElementById('brush-buttons')
 
   for (let i = 0; i < brushes.length; ++i) {
     const button = document.createElement('button')
 
+    button.classList.add('brush-button')
     button.innerText = brushes[i].name
+
+    if (i === brush.getBrush()) {
+      button.setAttribute('disabled', true)
+    }
+
     button.addEventListener('click', ev => {
       ev.preventDefault()
       brush.setBrushType(i)
-      showBrush(brush)
+
+      brushesDiv.querySelectorAll('.brush-button').forEach(b => {
+        b.removeAttribute('disabled')
+      })
+      button.setAttribute('disabled', true)
     })
 
     brushesDiv.appendChild(button)
@@ -105,23 +111,13 @@ async function main () {
     glh.subImage(frontTexture, pixels.pixels, x, glh.sizeY - y, pixels.w, pixels.h)
   }
 
+  canvas.addEventListener('contextmenu', ev => ev.preventDefault())
   canvas.addEventListener('mousemove', event => {
     if (event.buttons & 1) {
       onclick(event.offsetX, event.offsetY)
     }
   })
-  
 
-  canvas.addEventListener('contextmenu', ev => ev.preventDefault())
-  canvas.addEventListener('mousedown', event => {
-    if (event.buttons & 2) {
-      event.preventDefault()
-      brush.nextBrush()
-      showBrush(brush)
-    }
-  })
-
-  showBrush(brush)
   setUpTools(brush)
 
   const stepsPerDraw = 1
