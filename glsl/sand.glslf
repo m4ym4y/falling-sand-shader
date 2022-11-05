@@ -16,7 +16,7 @@ uniform highp float seed;
 
 // 255, 0, 0
 #define fire vec4(1.0, 0.0, 0.0, 1.0)
-#define fire_burnout_1 vec4(0.8, 0.2, 0.2, 1.0)
+#define fire_burnout_1 vec4(1.0, 0.6470588235294118, 0.0, 1.0)
 #define fire_burnout_2 vec4(0.6, 0.2, 0.2, 1.0)
 
 // 129, 133, 137
