@@ -30,6 +30,8 @@ const fire = [ 255, 0, 0, 255 ]
 const fireB1 = [ 204, 51, 51, 255 ]
 const fireB2 = [ 153, 51, 51, 255 ]
 const cloner = [ 111, 78, 55, 255 ]
+const metal = [ 129, 133, 137, 255 ]
+const lightning = [ 255, 230, 0, 255 ]
 
 function createShader (gl, source, type) {
   const shader = gl.createShader(type)
@@ -181,6 +183,8 @@ async function main () {
   const fragmentShader = await loadShader('./glsl/sand.glslf')
   const fragmentShaderCopy = await loadShader('./glsl/copy.glslf')
 
+  console.log(fragmentShader)
+
   // simulation program
   const program = gl.createProgram()
   gl.attachShader(program, createShader(gl, vertexShader, gl.VERTEX_SHADER))
@@ -234,6 +238,14 @@ async function main () {
       color: cloner
     },
     {
+      name: 'metal',
+      color: metal
+    },
+    {
+      name: 'lightning',
+      color: lightning
+    },
+    {
       name: 'erase',
       color: empty
     }
@@ -241,7 +253,6 @@ async function main () {
   let brushType = 0
 
   const onclick = function (x, y) {
-    console.log(brushType, brushes, brushes[brushType])
     gl.bindTexture(gl.TEXTURE_2D, frontTexture)
     gl.texSubImage2D(gl.TEXTURE_2D, 0, x, sizeY - y, brushSize, brushSize, gl.RGBA, gl.UNSIGNED_BYTE,
       getColorArea(brushSize, brushSize, brushes[brushType].color))
@@ -249,7 +260,6 @@ async function main () {
 
   canvas.addEventListener('mousemove', event => {
     if (event.buttons & 1) {
-      console.log('registered move')
       onclick(event.offsetX, event.offsetY)
     }
   })
@@ -284,6 +294,5 @@ async function main () {
     await new Promise(resolve => setTimeout(resolve, 0))
   }
 }
-
 
 window.addEventListener('load', main)

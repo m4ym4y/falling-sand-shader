@@ -19,41 +19,54 @@ uniform highp float seed;
 #define fire_burnout_1 vec4(0.8, 0.2, 0.2, 1.0)
 #define fire_burnout_2 vec4(0.6, 0.2, 0.2, 1.0)
 
+// 129, 133, 137
+#define metal vec4(0.5058823529411764, 0.5215686274509804, 0.5372549019607843, 1.0)
+#define metal_sparking vec4(1.0, 0.7647058823529411, 0.0, 1.0)
+#define metal_sparked vec4(1.0, 0.9372549019607843, 0.0, 1.0)
+
+// 255, 230, 0
+#define lightning vec4(1.0, 0.9019607843137255, 0.0, 1.0)
+
 // 11, 78, 55
 #define cloner vec4(0.43529411764705883, 0.3058823529411765, 0.21568627450980393, 1.0)
 #define cloner_sand vec4(0.43529411764705883, 0.3058823529411765, 0.2196078431372549, 1.0)
 #define cloner_fire vec4(0.43529411764705883, 0.3058823529411765, 0.2235294117647059, 1.0)
 
+#define eq(a, b) (length(a - b) < 0.001)
+#define neq(a, b) (length(a - b) >= 0.001)
 #define adjacent(material) \
-  dc == material || \
-  dr == material || \
-  dl == material || \
-  uc == material || \
-  ul == material || \
-  ur == material || \
-  uc == material
+  (eq(dc, material) || \
+  eq(dr, material) || \
+  eq(dl, material) || \
+  eq(uc, material) || \
+  eq(ul, material) || \
+  eq(ur, material) || \
+  eq(uc, material))
 
 vec4 get(int x, int y) {
   return vec4(texture2D(state, (gl_FragCoord.xy + vec2(x, y)) / scale));
 }
 
 float rand() {
-  return fract(sin(dot(gl_FragCoord * seed, vec2(12.9898, 78.233))) * 43758.5453);
+  return fract(sin(dot(vec2(gl_FragCoord.xy) * seed, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
 // is a material solid?
 bool solid(vec4 material) {
-  return material == sand ||
-    material == wall ||
-    material == cloner ||
-    material == cloner_fire ||
-    material == cloner_sand;
+  return eq(material, sand) ||
+    eq(material, wall) ||
+    eq(material, cloner) ||
+    eq(material, cloner_fire) ||
+    eq(material, cloner_sand) ||
+    eq(material, metal) ||
+    eq(material, metal_sparking) ||
+    eq(material, metal_sparked);
 }
 
 bool unreactive(vec4 material) {
-  return material == wall ||
-    material == cloner_fire ||
-    material == cloner_sand;
+  return eq(material, wall) ||
+    eq(material, cloner_fire) ||
+    eq(material, cloner_sand);
 }
 
 void main() {
@@ -75,7 +88,7 @@ void main() {
   vec4 dc = vec4(get(0, -1));
   vec4 dr = vec4(get(1, -1));
 
-  if (current == cloner) {
+  if (eq(current, cloner)) {
     // cloner exposed to fire becomes fire cloner
     if (adjacent(cloner_fire) || adjacent(fire)) {
       gl_FragColor = cloner_fire;
@@ -92,9 +105,9 @@ void main() {
     }
   }
 
-  else if (current == sand) {
+  else if (eq(current, sand)) {
     // sand exposed to fire + random catch chance = fire
-    if (adjacent(fire) && rand() > 0.7) {
+    if ((adjacent(fire) || adjacent(metal_sparking)) && rand() > 0.7) {
       gl_FragColor = fire;
     }
 
@@ -103,11 +116,11 @@ void main() {
       solid(dc) &&
       // sand is not on a corner; sand on corner will fall
       (
-        uc != empty ||
-        dc != sand ||
+        neq(uc, empty) ||
+        neq(dc, sand) ||
         (
-          (cl != empty || ul != empty || dl != empty) &&
-          (cr != empty || ur != empty || dr != empty)
+          (neq(cl, empty) || neq(ul, empty) || neq(dl, empty)) &&
+          (neq(cr, empty) || neq(ur, empty) || neq(dr, empty))
         )
       )
     ) {
@@ -122,7 +135,7 @@ void main() {
   }
 
   // each stage of fire will 90% stay the same, or progress to the next stage of burning
-  else if (current == fire) {
+  else if (eq(current, fire)) {
     if (rand() > 0.9) {
       gl_FragColor = fire_burnout_1;
     } else {
@@ -130,7 +143,7 @@ void main() {
     }
   }
 
-  else if (current == fire_burnout_1) {
+  else if (eq(current, fire_burnout_1)) {
     if (rand() > 0.9) {
       gl_FragColor = fire_burnout_2;
     } else {
@@ -138,7 +151,7 @@ void main() {
     }
   }
 
-  else if (current == fire_burnout_2) {
+  else if (eq(current, fire_burnout_2)) {
     if (rand() > 0.9) {
       gl_FragColor = empty;
     } else {
@@ -146,24 +159,44 @@ void main() {
     }
   }
 
-  else if (current == empty) {
+  else if (eq(current, metal)) {
+    if (adjacent(lightning) || adjacent(metal_sparking)) {
+      gl_FragColor = metal_sparking;
+    } else {
+      gl_FragColor = metal;
+    }
+  }
+
+  else if (eq(current, metal_sparking)) {
+    gl_FragColor = metal_sparked;
+  }
+
+  else if (eq(current, metal_sparked)) {
+    if (rand() > 0.95) {
+      gl_FragColor = metal;
+    } else {
+      gl_FragColor = metal_sparked;
+    }
+  }
+
+  else if (eq(current, empty)) {
     if (
       // is sand falling into this cell vertically
-      uc == sand ||
+      eq(uc, sand) ||
       // is sand falling into this cell from adjacent corner of pile
       (
-        uc == empty &&
-        dc == empty &&
+        eq(uc, empty) &&
+        eq(dc, empty) &&
         (
           (
-            cr == sand &&
-            ur == empty &&
-            dr == sand
+            eq(cr, sand) &&
+            eq(ur, empty) &&
+            eq(dr, sand)
           ) ||
           (
-            cl == sand &&
-            ul == empty &&
-            dl == sand
+            eq(cl, sand) &&
+            eq(ul, empty) &&
+            eq(dl, sand)
           )
         )
       )
@@ -172,8 +205,8 @@ void main() {
     }
 
     // cell under a sand cloner will become sand
-    else if (current == empty && uc == cloner_sand) {
-      if (rand(vec2(gl_FragCoord) * (seed + 2.0)) > 0.95) {
+    else if (eq(current, empty) && eq(uc, cloner_sand)) {
+      if (rand() > 0.95) {
         gl_FragColor = sand;
       } else {
         gl_FragColor = empty;
@@ -181,8 +214,8 @@ void main() {
     }
 
     // cell over a fire cloner will become fire
-    else if (current == empty && dc == cloner_fire) {
-      if (rand(vec2(gl_FragCoord) * (seed + 2.0)) > 0.5) {
+    else if (eq(current, empty) && eq(dc, cloner_fire)) {
+      if (rand() > 0.5) {
         gl_FragColor = fire;
       } else {
         gl_FragColor = empty;
@@ -190,7 +223,7 @@ void main() {
     }
 
     // cell over a fire that is burning out will become fire, causing rising flame effect
-    else if (current == empty && dc == fire_burnout_1) {
+    else if (eq(current, empty) && eq(dc, fire_burnout_1)) {
       if (rand() > 0.2) {
         gl_FragColor = fire_burnout_1;
       } else {
