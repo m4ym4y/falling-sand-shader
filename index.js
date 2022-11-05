@@ -53,11 +53,15 @@ const verts = [
   1, 1
 ]
 
+let quad
 function drawQuad (gl, program) {
-  const quad = gl.createBuffer()
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, quad)
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW)
+  if (!quad) {
+    quad = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, quad)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.STATIC_DRAW)
+  } else {
+    gl.bindBuffer(gl.ARRAY_BUFFER, quad)
+  }
 
   const attrib = gl.getAttribLocation(program, 'a_position')
 
