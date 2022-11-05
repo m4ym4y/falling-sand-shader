@@ -52,6 +52,10 @@ export class Brush {
     return this.brushType
   }
 
+  getBrushSize () {
+    return this.brushSize
+  }
+
   nextBrush () {
     this.brushType = (this.brushType + 1) % brushes.length
   }

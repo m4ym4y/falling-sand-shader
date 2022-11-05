@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <body>
   <canvas id="glCanvas" width="1024" height="1024"></canvas>
-  <p>fps: <span id="fps"></span></p>
-  <p>brush: <span id="brush"></span></p>
   <div>
+    <span>brush: <b><span id="brush"></span></b>,</span>
     <label for="brush-size">brush size:</label>
     <input type="number" min="1" max="100" id="brush-size" />
   </div>
   <div id="brush-buttons">
   </div>
+  <p>fps: <span id="fps"></span></p>
   <p>Left click to place the selected element. Use right click to cycle through elements.</p>
   <script type="module" src="./index.js"></script>
 </body>

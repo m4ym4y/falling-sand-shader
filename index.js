@@ -1,4 +1,4 @@
-import { Brush } from './src/brush.js'
+import { Brush, brushes } from './src/brush.js'
 import * as Material from './src/material.js'
 import { GlHelper } from './src/gl.js'
 
@@ -36,6 +36,38 @@ function setRandom (glh, texture, concentration) {
   glh.subImage(texture, source)
 }
 
+function showBrush (brush) {
+  document.getElementById('brush').innerText = brush.getBrushName()
+}
+
+function setUpTools (brush) {
+  const brushesDiv = document.getElementById('brush-buttons')
+
+  for (let i = 0; i < brushes.length; ++i) {
+    const button = document.createElement('button')
+
+    button.innerText = brushes[i].name
+    button.addEventListener('click', ev => {
+      ev.preventDefault()
+      brush.setBrushType(i)
+      showBrush(brush)
+    })
+
+    brushesDiv.appendChild(button)
+  }
+
+  const brushSize = document.getElementById('brush-size')
+  brushSize.value = brush.getBrushSize()
+
+  brushSize.addEventListener('change', ev => {
+    const value = Number(ev.target.value)
+
+    if (value >= 1 && value <= 50) {
+      brush.setBrushSize(value)
+    }
+  })
+}
+
 async function loadShader (url) {
   const request = await fetch(url)
   const text = await request.text()
@@ -66,12 +98,6 @@ async function main () {
   glh.setup()
   setRandom(glh, frontTexture, 0.2)
 
-  let frames = 0
-  setInterval(() => {
-    document.querySelector('#fps').innerText = frames
-    frames = 0
-  }, 1000)
-
   const brush = new Brush()
 
   const onclick = function (x, y) {
@@ -85,22 +111,28 @@ async function main () {
     }
   })
   
-  const showBrush = () => {
-    document.getElementById('brush').innerText = brush.getBrushName()
-  }
 
   canvas.addEventListener('contextmenu', ev => ev.preventDefault())
   canvas.addEventListener('mousedown', event => {
     if (event.buttons & 2) {
       event.preventDefault()
       brush.nextBrush()
-      showBrush()
+      showBrush(brush)
     }
   })
 
-  showBrush()
+  showBrush(brush)
+  setUpTools(brush)
 
   const stepsPerDraw = 1
+
+  let frames = 0
+  let delay = 0
+  setInterval(() => {
+    document.querySelector('#fps').innerText = frames
+    frames = 0
+  }, 1000)
+
 
   while (true) {
     for (let i = 0; i < stepsPerDraw; ++i) {
@@ -115,7 +147,7 @@ async function main () {
     glh.renderTextureToDisplay(copyProgram, frontTexture)
 
     frames++
-    await new Promise(resolve => setTimeout(resolve, 0))
+    await new Promise(resolve => setTimeout(resolve, delay))
   }
 }
 
