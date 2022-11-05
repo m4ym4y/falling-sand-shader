@@ -8,6 +8,12 @@
   <div id="brush-buttons">
   </div>
   <p>fps: <span id="fps"></span></p>
+  <div>
+    <label for="enable-fps-cap">cap fps?</label>
+    <input type="checkbox" checked id="enable-fps-cap" />
+    <label for="target-fps">target fps:</label>
+    <input type="number" min="1" max="500" value="144" id="target-fps" />
+  </div>
   <p>Left click to place the selected element. You can change the element and brush with the controls above.</p>
   <script type="module" src="./index.js"></script>
 </body>

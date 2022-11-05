@@ -123,14 +123,12 @@ async function main () {
   const stepsPerDraw = 1
 
   let frames = 0
-  let delay = 0
   setInterval(() => {
     document.querySelector('#fps').innerText = frames
     frames = 0
   }, 1000)
 
-
-  while (true) {
+  const mainLoop = () => {
     for (let i = 0; i < stepsPerDraw; ++i) {
       glh.renderFrontToBackTexture(program, frontTexture, backTexture)
 
@@ -143,8 +141,33 @@ async function main () {
     glh.renderTextureToDisplay(copyProgram, frontTexture)
 
     frames++
-    await new Promise(resolve => setTimeout(resolve, delay))
   }
+
+  let interval = setInterval(mainLoop, 1000 / 144)
+
+  const reloadFpsLimit = () => {
+    const target = Number(document.getElementById('target-fps').value)
+
+    if (target) {
+      clearInterval(interval)
+      interval = setInterval(mainLoop, 1000 / target)
+    }
+  }
+
+  document.getElementById('target-fps').addEventListener('change', () => {
+    if (document.getElementById('enable-fps-cap').checked) {
+      reloadFpsLimit()
+    }
+  })
+
+  document.getElementById('enable-fps-cap').addEventListener('click', ev => {
+    if (!ev.target.checked) {
+      clearInterval(interval)
+      interval = setInterval(mainLoop, 0)
+    } else {
+      reloadFpsLimit()
+    }
+  })
 }
 
 window.addEventListener('load', main)
