@@ -2,8 +2,8 @@ import * as Material from './material.js'
 
 export const brushes = [
   {
-    name: 'sand',
-    color: Material.sand
+    name: 'dust',
+    color: Material.dust
   },
   {
     name: 'wall',

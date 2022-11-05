@@ -1,4 +1,4 @@
-export const sand = [ 246, 215, 176, 255 ]
+export const dust = [ 246, 215, 176, 255 ]
 export const wall = [ 127, 127, 127, 255 ]
 export const empty = [ 0, 0, 0, 255 ]
 export const fire = [ 255, 0, 0, 255 ]

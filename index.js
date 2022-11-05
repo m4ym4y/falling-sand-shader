@@ -30,7 +30,7 @@ function setBorder (source, sizeX, sizeY, color) {
 }
 
 function setRandom (glh, texture, concentration) {
-  const source = getRandomCells(glh.sizeX, glh.sizeY, concentration, Material.sand)
+  const source = getRandomCells(glh.sizeX, glh.sizeY, concentration, Material.dust)
   setBorder(source, glh.sizeX, glh.sizeY, Material.wall)
 
   glh.subImage(texture, source)

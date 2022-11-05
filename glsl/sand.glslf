@@ -6,7 +6,7 @@ uniform highp float seed;
 #define scale 1024.0
 
 // 246,215,176
-#define sand vec4(0.9647058823529412, 0.8431372549019608, 0.6901960784313725, 1.0)
+#define dust vec4(0.9647058823529412, 0.8431372549019608, 0.6901960784313725, 1.0)
 
 // 127,127,127
 #define wall vec4(0.4980392156862745, 0.4980392156862745, 0.4980392156862745, 1.0)
@@ -29,7 +29,7 @@ uniform highp float seed;
 
 // 11, 78, 55
 #define cloner vec4(0.43529411764705883, 0.3058823529411765, 0.21568627450980393, 1.0)
-#define cloner_sand vec4(0.43529411764705883, 0.3058823529411765, 0.2196078431372549, 1.0)
+#define cloner_dust vec4(0.43529411764705883, 0.3058823529411765, 0.2196078431372549, 1.0)
 #define cloner_fire vec4(0.43529411764705883, 0.3058823529411765, 0.2235294117647059, 1.0)
 
 #define eq(a, b) (length(a - b) < 0.001)
@@ -53,11 +53,11 @@ float rand() {
 
 // is a material solid?
 bool solid(vec4 material) {
-  return eq(material, sand) ||
+  return eq(material, dust) ||
     eq(material, wall) ||
     eq(material, cloner) ||
     eq(material, cloner_fire) ||
-    eq(material, cloner_sand) ||
+    eq(material, cloner_dust) ||
     eq(material, metal) ||
     eq(material, metal_sparking) ||
     eq(material, metal_sparked);
@@ -66,7 +66,7 @@ bool solid(vec4 material) {
 bool unreactive(vec4 material) {
   return eq(material, wall) ||
     eq(material, cloner_fire) ||
-    eq(material, cloner_sand);
+    eq(material, cloner_dust);
 }
 
 void main() {
@@ -94,9 +94,9 @@ void main() {
       gl_FragColor = cloner_fire;
     }
 
-    // cloner exposed to sand becomes sand cloner
-    else if (adjacent(cloner_sand) || adjacent(sand)) {
-      gl_FragColor = cloner_sand;
+    // cloner exposed to dust becomes dust cloner
+    else if (adjacent(cloner_dust) || adjacent(dust)) {
+      gl_FragColor = cloner_dust;
     }
 
     // stay as cloner otherwise
@@ -105,30 +105,30 @@ void main() {
     }
   }
 
-  else if (eq(current, sand)) {
-    // sand exposed to fire + random catch chance = fire
+  else if (eq(current, dust)) {
+    // dust exposed to fire + random catch chance = fire
     if ((adjacent(fire) || adjacent(metal_sparking)) && rand() > 0.7) {
       gl_FragColor = fire;
     }
 
     else if (
-      // sand lands on something = cell stays as sand
+      // dust lands on something = cell stays as dust
       solid(dc) &&
-      // sand is not on a corner; sand on corner will fall
+      // dust is not on a corner; dust on corner will fall
       (
         neq(uc, empty) ||
-        neq(dc, sand) ||
+        neq(dc, dust) ||
         (
           (neq(cl, empty) || neq(ul, empty) || neq(dl, empty)) &&
           (neq(cr, empty) || neq(ur, empty) || neq(dr, empty))
         )
       )
     ) {
-      gl_FragColor = sand;
+      gl_FragColor = dust;
     }
 
     // if there is no solid ground OR this cell is the corner of a pile,
-    // the sand will fall. this cell becomes empty.
+    // the dust will fall. this cell becomes empty.
     else {
       gl_FragColor = empty;
     }
@@ -181,33 +181,33 @@ void main() {
 
   else if (eq(current, empty)) {
     if (
-      // is sand falling into this cell vertically
-      eq(uc, sand) ||
-      // is sand falling into this cell from adjacent corner of pile
+      // is dust falling into this cell vertically
+      eq(uc, dust) ||
+      // is dust falling into this cell from adjacent corner of pile
       (
         eq(uc, empty) &&
         eq(dc, empty) &&
         (
           (
-            eq(cr, sand) &&
+            eq(cr, dust) &&
             eq(ur, empty) &&
-            eq(dr, sand)
+            eq(dr, dust)
           ) ||
           (
-            eq(cl, sand) &&
+            eq(cl, dust) &&
             eq(ul, empty) &&
-            eq(dl, sand)
+            eq(dl, dust)
           )
         )
       )
     ) {
-      gl_FragColor = sand;
+      gl_FragColor = dust;
     }
 
-    // cell under a sand cloner will become sand
-    else if (eq(current, empty) && eq(uc, cloner_sand)) {
+    // cell under a dust cloner will become dust
+    else if (eq(current, empty) && eq(uc, cloner_dust)) {
       if (rand() > 0.95) {
-        gl_FragColor = sand;
+        gl_FragColor = dust;
       } else {
         gl_FragColor = empty;
       }
