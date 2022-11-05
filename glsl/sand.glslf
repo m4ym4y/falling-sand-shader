@@ -172,7 +172,7 @@ void main() {
   }
 
   else if (eq(current, metal_sparked)) {
-    if (rand() > 0.95) {
+    if (rand() > 0.99) {
       gl_FragColor = metal;
     } else {
       gl_FragColor = metal_sparked;
