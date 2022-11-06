@@ -45,6 +45,9 @@ function setUpTools (brush) {
     button.classList.add('brush-button')
     button.innerText = brushes[i].name
 
+    const c = brushes[i].color
+    button.style.backgroundColor = `rgba(${c[0]}, ${c[1]}, ${c[2]})`
+
     if (i === brush.getBrush()) {
       button.setAttribute('disabled', true)
     }
