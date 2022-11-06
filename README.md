@@ -1,6 +1,6 @@
 # sand game shader
 
-![gif of sand game](./sand-demo.gif)
+![screenshot](./screenshot.png)
 
 [**Try it out**](https://m4ym4y.github.io/falling-sand-shader/)
 
@@ -42,3 +42,19 @@ it will spark into a fire.
 
 Lightning fades instantly (in the current version), but if it is placed directly touching metal
 it will electrify the metal and cause electricity to conduct through it.
+
+### Quartz
+
+**Experimental**
+
+When it comes into contact with electrified metal or lightning, quartz will
+become charged. If charged quartz comes into contact with lightning or
+electrified metal, it will release a shockwave that will cause metal to become
+electrified.
+
+### Water
+
+**Experimental**
+
+Water falls like sand, but tries to spread out and fill its container unlike
+dust. However, the current version of doesn't really obey any laws of physics.
