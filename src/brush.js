@@ -26,6 +26,10 @@ export const brushes = [
     color: Material.lightning
   },
   {
+    name: 'water',
+    color: Material.water
+  },
+  {
     name: 'erase',
     color: Material.empty
   }

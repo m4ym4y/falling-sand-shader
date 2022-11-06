@@ -27,10 +27,14 @@ uniform highp float seed;
 // 255, 230, 0
 #define lightning vec4(1.0, 0.9019607843137255, 0.0, 1.0)
 
+// 102, 153, 255
+#define water vec4(0.4, 0.6, 1.0, 1.0)
+
 // 11, 78, 55
 #define cloner vec4(0.43529411764705883, 0.3058823529411765, 0.21568627450980393, 1.0)
 #define cloner_dust vec4(0.43529411764705883, 0.3058823529411765, 0.2196078431372549, 1.0)
 #define cloner_fire vec4(0.43529411764705883, 0.3058823529411765, 0.2235294117647059, 1.0)
+#define cloner_water vec4(0.43529411764705883, 0.3058823529411765, 0.22745098039215686, 1.0)
 
 #define eq(a, b) (length(a - b) < 0.001)
 #define neq(a, b) (length(a - b) >= 0.001)
@@ -58,14 +62,17 @@ bool solid(vec4 material) {
     eq(material, cloner) ||
     eq(material, cloner_fire) ||
     eq(material, cloner_dust) ||
+    eq(material, cloner_water) ||
     eq(material, metal) ||
     eq(material, metal_sparking) ||
-    eq(material, metal_sparked);
+    eq(material, metal_sparked) ||
+    eq(material, water);
 }
 
 bool unreactive(vec4 material) {
   return eq(material, wall) ||
     eq(material, cloner_fire) ||
+    eq(material, cloner_water) ||
     eq(material, cloner_dust);
 }
 
@@ -97,6 +104,11 @@ void main() {
     // cloner exposed to dust becomes dust cloner
     else if (adjacent(cloner_dust) || adjacent(dust)) {
       gl_FragColor = cloner_dust;
+    }
+    //
+    // cloner exposed to water becomes water cloner
+    else if (adjacent(cloner_water) || adjacent(water)) {
+      gl_FragColor = cloner_water;
     }
 
     // stay as cloner otherwise
@@ -130,6 +142,26 @@ void main() {
     // if there is no solid ground OR this cell is the corner of a pile,
     // the dust will fall. this cell becomes empty.
     else {
+      gl_FragColor = empty;
+    }
+  }
+
+  else if (eq(current, water)) {
+    if (
+      neq(dc, empty) &&
+      (
+        (neq(cr, empty) && neq(cl, empty)) ||
+        (eq(cr, empty) && eq(get(2, 0), water) && neq(cl, water)) ||
+        (eq(cl, empty) && eq(get(-2, 0), water) && neq(cr, water)) ||
+        neq(uc, empty)
+      ) &&
+      (
+        (neq(cl, empty) || neq(ul, empty) || neq(dl, empty)) &&
+        (neq(cr, empty) || neq(ur, empty) || neq(dr, empty))
+      )
+    ) {
+      gl_FragColor = water;
+    } else {
       gl_FragColor = empty;
     }
   }
@@ -204,10 +236,39 @@ void main() {
       gl_FragColor = dust;
     }
 
+    else if (
+      eq(uc, water) ||
+      (eq(cl, water) && neq(dl, empty) && eq(ul, empty)) ||
+      (eq(cr, water) && neq(dr, empty) && eq(ur, empty)) ||
+      (
+        (
+          eq(cr, water) &&
+          eq(ur, empty) &&
+          eq(dr, water)
+        ) ||
+        (
+          eq(cl, water) &&
+          eq(ul, empty) &&
+          eq(dl, water)
+        )
+      )
+    ) {
+      gl_FragColor = water;
+    }
+
     // cell under a dust cloner will become dust
     else if (eq(current, empty) && eq(uc, cloner_dust)) {
       if (rand() > 0.95) {
         gl_FragColor = dust;
+      } else {
+        gl_FragColor = empty;
+      }
+    }
+
+    // cell under a water cloner will become water
+    else if (eq(current, empty) && eq(uc, cloner_water)) {
+      if (rand() > 0.95) {
+        gl_FragColor = water;
       } else {
         gl_FragColor = empty;
       }
