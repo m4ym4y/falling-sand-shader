@@ -32,6 +32,13 @@ uniform highp float seed;
 #define cloner_dust vec4(0.43529411764705883, 0.3058823529411765, 0.2196078431372549, 1.0)
 #define cloner_fire vec4(0.43529411764705883, 0.3058823529411765, 0.2235294117647059, 1.0)
 
+// 191, 170, 177
+#define quartz vec4(0.7490196078431373, 0.6666666666666666, 0.6941176470588235, 1.0)
+#define quartz_charging vec4(1.0, 0.6627450980392157, 0.6901960784313725, 1.0)
+#define quartz_charged vec4(1.0, 0.8, 0.8705882352941177, 1.0)
+#define quartz_sparking vec4(1.0, 0.0, 1.0, 1.0)
+#define quartz_sparked vec4(0.8, 0.0, 0.8, 1.0)
+
 #define eq(a, b) (length(a - b) < 0.001)
 #define neq(a, b) (length(a - b) >= 0.001)
 #define adjacent(material) \
@@ -60,7 +67,10 @@ bool solid(vec4 material) {
     eq(material, cloner_dust) ||
     eq(material, metal) ||
     eq(material, metal_sparking) ||
-    eq(material, metal_sparked);
+    eq(material, metal_sparked) ||
+    eq(material, quartz) ||
+    eq(material, quartz_sparking) ||
+    eq(material, quartz_charged);
 }
 
 bool unreactive(vec4 material) {
@@ -88,7 +98,66 @@ void main() {
   vec4 dc = vec4(get(0, -1));
   vec4 dr = vec4(get(1, -1));
 
-  if (eq(current, cloner)) {
+  // there are the most empty cells, so do this one first
+  if (eq(current, empty)) {
+    if (
+      // is dust falling into this cell vertically
+      eq(uc, dust) ||
+      // is dust falling into this cell from adjacent corner of pile
+      (
+        eq(uc, empty) &&
+        eq(dc, empty) &&
+        (
+          (
+            eq(cr, dust) &&
+            eq(ur, empty) &&
+            eq(dr, dust)
+          ) ||
+          (
+            eq(cl, dust) &&
+            eq(ul, empty) &&
+            eq(dl, dust)
+          )
+        )
+      )
+    ) {
+      gl_FragColor = dust;
+    }
+
+    // cell under a dust cloner will become dust
+    else if (eq(current, empty) && eq(uc, cloner_dust)) {
+      if (rand() > 0.95) {
+        gl_FragColor = dust;
+      } else {
+        gl_FragColor = empty;
+      }
+    }
+
+    // cell over a fire cloner will become fire
+    else if (eq(current, empty) && eq(dc, cloner_fire)) {
+      if (rand() > 0.5) {
+        gl_FragColor = fire;
+      } else {
+        gl_FragColor = empty;
+      }
+    }
+
+    // cell over a fire that is burning out will become fire, causing rising flame effect
+    else if (eq(current, empty) && eq(dc, fire_burnout_1)) {
+      if (rand() > 0.2) {
+        gl_FragColor = fire_burnout_1;
+      } else {
+        gl_FragColor = fire_burnout_2;
+      }
+    }
+
+    // empty cells with no other rules are empty
+    else {
+      gl_FragColor = empty;
+    }
+  }
+
+  else if (eq(current, cloner)) {
     // cloner exposed to fire becomes fire cloner
     if (adjacent(cloner_fire) || adjacent(fire)) {
       gl_FragColor = cloner_fire;
@@ -160,7 +229,7 @@ void main() {
   }
 
   else if (eq(current, metal)) {
-    if (adjacent(lightning) || adjacent(metal_sparking)) {
+    if (adjacent(lightning) || adjacent(metal_sparking) || adjacent(quartz_sparking)) {
       gl_FragColor = metal_sparking;
     } else {
       gl_FragColor = metal;
@@ -179,61 +248,42 @@ void main() {
     }
   }
 
-  else if (eq(current, empty)) {
-    if (
-      // is dust falling into this cell vertically
-      eq(uc, dust) ||
-      // is dust falling into this cell from adjacent corner of pile
-      (
-        eq(uc, empty) &&
-        eq(dc, empty) &&
-        (
-          (
-            eq(cr, dust) &&
-            eq(ur, empty) &&
-            eq(dr, dust)
-          ) ||
-          (
-            eq(cl, dust) &&
-            eq(ul, empty) &&
-            eq(dl, dust)
-          )
-        )
-      )
-    ) {
-      gl_FragColor = dust;
+  else if (eq(current, quartz)) {
+    // do we need to check both?
+    if (adjacent(lightning) || adjacent(metal_sparking) || adjacent(quartz_charging)) {
+      gl_FragColor = quartz_charging;
+    } else {
+      gl_FragColor = quartz;
     }
-
-    // cell under a dust cloner will become dust
-    else if (eq(current, empty) && eq(uc, cloner_dust)) {
-      if (rand() > 0.95) {
-        gl_FragColor = dust;
-      } else {
-        gl_FragColor = empty;
-      }
+  }
+  
+  else if (eq(current, quartz_charging)) {
+    if (adjacent(quartz_sparking)) {
+      gl_FragColor = quartz_sparking;
+    } else if (rand() > 0.99) {
+      gl_FragColor = quartz_charged;
+    } else {
+      gl_FragColor = quartz_charging;
     }
+  }
 
-    // cell over a fire cloner will become fire
-    else if (eq(current, empty) && eq(dc, cloner_fire)) {
-      if (rand() > 0.5) {
-        gl_FragColor = fire;
-      } else {
-        gl_FragColor = empty;
-      }
+  else if (eq(current, quartz_charged)) {
+    if (adjacent(lightning) || adjacent(metal_sparking) || adjacent(quartz_sparking)) {
+      gl_FragColor = quartz_sparking;
+    } else {
+      gl_FragColor = quartz_charged;
     }
+  }
 
-    // cell over a fire that is burning out will become fire, causing rising flame effect
-    else if (eq(current, empty) && eq(dc, fire_burnout_1)) {
-      if (rand() > 0.2) {
-        gl_FragColor = fire_burnout_1;
-      } else {
-        gl_FragColor = fire_burnout_2;
-      }
-    }
+  else if (eq(current, quartz_sparking)) {
+    gl_FragColor = quartz_sparked;
+  }
 
-    // empty cells with no other rules are empty
-    else {
-      gl_FragColor = empty;
+  else if (eq(current, quartz_sparked)) {
+    if (rand() > 0.99) {
+      gl_FragColor = quartz;
+    } else {
+      gl_FragColor = quartz_sparked;
     }
   }
 
