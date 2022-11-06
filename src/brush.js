@@ -30,6 +30,10 @@ export const brushes = [
     color: Material.water
   },
   {
+    name: 'quartz',
+    color: Material.quartz
+  },
+  {
     name: 'erase',
     color: Material.empty
   }
