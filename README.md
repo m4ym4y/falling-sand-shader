@@ -58,3 +58,7 @@ electrified.
 
 Water falls like sand, but tries to spread out and fill its container unlike
 dust. However, the current version of doesn't really obey any laws of physics.
+
+### Sink
+
+Sink is a solid element like a wall, but any particle that lands on it is destroyed.

@@ -43,6 +43,9 @@ uniform highp float seed;
 #define quartz_sparking vec4(1.0, 0.0, 1.0, 1.0)
 #define quartz_sparked vec4(0.8, 0.0, 0.8, 1.0)
 
+// 4, 93, 93
+#define sink vec4(0.01568627450980392, 0.36470588235294116, 0.36470588235294116, 1.0)
+
 #define eq(a, b) (length(a - b) < 0.001)
 #define neq(a, b) (length(a - b) >= 0.001)
 #define adjacent(material) \
@@ -83,7 +86,8 @@ bool unreactive(vec4 material) {
   return eq(material, wall) ||
     eq(material, cloner_fire) ||
     eq(material, cloner_water) ||
-    eq(material, cloner_dust);
+    eq(material, cloner_dust) ||
+    eq(material, sink);
 }
 
 void main() {
@@ -246,7 +250,7 @@ void main() {
 
   else if (eq(current, water)) {
     if (
-      neq(dc, empty) &&
+      solid(dc) &&
       (
         (neq(cr, empty) && neq(cl, empty)) ||
         (eq(cr, empty) && eq(get(2, 0), water) && neq(cl, water)) ||
